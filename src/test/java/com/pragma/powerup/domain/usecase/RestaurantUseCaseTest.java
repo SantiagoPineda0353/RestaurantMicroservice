@@ -33,33 +33,33 @@ class RestaurantUseCaseTest {
     }
 
     @Test
-    void saveRestaurant_restaurantValid(){
+    void saveRestaurant_whenRestaurantValid_thenSaveRestaurant(){
         when(userValidationPort.isOwner(restaurantModelValid.getIdOwner())).thenReturn(true);
         restaurantUseCase.saveRestaurant(restaurantModelValid);
         verify(restaurantPersistencePort).saveRestaurant(any(RestaurantModel.class));
     }
 
     @Test
-    void saveOwner_nitInvalid(){
+    void saveOwner_whenNitInvalid_thenThrowsException(){
         restaurantModelValid.setNit("2a21212");
         assertThrows(InvalidNitException.class, () ->restaurantUseCase.saveRestaurant(restaurantModelValid));
         verify(restaurantPersistencePort, never()).saveRestaurant(any());
     }
 
     @Test
-    void saveOwner_phoneInvalid(){
+    void saveOwner_whenPhoneInvalid_thenThrowsException(){
         restaurantModelValid.setPhone("+312322233212233");
         assertThrows(InvalidPhoneException.class, () ->restaurantUseCase.saveRestaurant(restaurantModelValid));
     }
 
     @Test
-    void saveOwner_nameInvalid(){
+    void saveOwner_whenNameInvalid_thenThrowsException(){
         restaurantModelValid.setName("12212");
         assertThrows(InvalidRestaurantNameException.class, () ->restaurantUseCase.saveRestaurant(restaurantModelValid));
     }
 
     @Test
-    void saveOwner_UserNotOwner(){
+    void saveOwner_whenUserNotOwner_thenThrowsException(){
         when(userValidationPort.isOwner(restaurantModelValid.getIdOwner())).thenReturn(false);
         assertThrows(UserNotOwnerException.class, () ->restaurantUseCase.saveRestaurant(restaurantModelValid));
         verify(restaurantPersistencePort, never()).saveRestaurant(any());
