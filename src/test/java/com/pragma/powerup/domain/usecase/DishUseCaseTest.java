@@ -13,8 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +30,7 @@ class DishUseCaseTest {
     private DishUseCase dishUseCase;
 
     private DishModel validDish;
+    private DishModel existingDish;
     private RestaurantModel validRestaurant;
     private static final Long OWNER_ID=1L;
 
@@ -43,6 +43,9 @@ class DishUseCaseTest {
 
         validRestaurant= new RestaurantModel(1l,"Restaurante valido","Calle falsa 123",
                 "+3142563564","url","1232312",OWNER_ID);
+
+        existingDish= new DishModel(1L, "Ajiaco", 5000, "Descripcion anterior",
+                "http:imagen.com", 1L,1L,true);
     }
 
     @Test
@@ -98,5 +101,58 @@ class DishUseCaseTest {
                 .thenReturn(false);
         assertThrows(CategoryNotFoundException.class, () ->dishUseCase.saveDish(validDish,OWNER_ID));
         verify(dishPersistencePort, never()).saveDish(any());
+    }
+
+    @Test
+    void updateDish_whenExistingDish_thenUpdateDishPriceAndDescription(){
+        when(dishPersistencePort.getDishById(1L))
+                .thenReturn(existingDish);
+        when(restaurantPersistencePort.getRestaurantById(existingDish.getIdRestaurant()))
+                .thenReturn(validRestaurant);
+        dishUseCase.updateDish(1L,"Nueva descripcion",40000,OWNER_ID);
+        verify(dishPersistencePort).updateDish(any());
+        assertEquals(40000,existingDish.getPrice());
+        assertEquals("Nueva descripcion",existingDish.getDescription());
+    }
+
+    @Test
+    void updateDish_whenNewPrice_thenUpdateDishPrice(){
+        when(dishPersistencePort.getDishById(1L))
+                .thenReturn(existingDish);
+        when(restaurantPersistencePort.getRestaurantById(existingDish.getIdRestaurant()))
+                .thenReturn(validRestaurant);
+        dishUseCase.updateDish(1L,null,40000,OWNER_ID);
+        verify(dishPersistencePort).updateDish(any());
+        assertEquals(40000,existingDish.getPrice());
+        assertEquals("Descripcion anterior",existingDish.getDescription());
+    }
+
+    @Test
+    void updateDish_whenDishNonExistent_thenThrowsException(){
+        when(dishPersistencePort.getDishById(99L))
+                .thenReturn(null);
+        assertThrows(DishNotFoundException.class, () -> dishUseCase.updateDish(99L,"Test",40000,OWNER_ID));
+        verify(dishPersistencePort,never()).updateDish(any());
+    }
+
+    @Test
+    void updateDish_whenUserIsNotRestaurantOwner_thenThrowsException(){
+        when(dishPersistencePort.getDishById(1L))
+                .thenReturn(existingDish);
+        when(restaurantPersistencePort.getRestaurantById(existingDish.getIdRestaurant()))
+                .thenReturn(validRestaurant);
+        Long userNotRestaurantOwner=999L;
+        assertThrows(UserNotRestaurantOwnerException.class, () -> dishUseCase.updateDish(1L,"desc",50000,userNotRestaurantOwner));
+        verify(dishPersistencePort,never()).updateDish(any());
+    }
+
+    @Test
+    void updateDish_whenPriceInvalid_thenThrowsException(){
+        when(dishPersistencePort.getDishById(1L))
+                .thenReturn(existingDish);
+        when(restaurantPersistencePort.getRestaurantById(existingDish.getIdRestaurant()))
+                .thenReturn(validRestaurant);
+        assertThrows(InvalidPriceException.class, () -> dishUseCase.updateDish(1L,"Test",-100,OWNER_ID));
+        verify(dishPersistencePort,never()).updateDish(any());
     }
 }

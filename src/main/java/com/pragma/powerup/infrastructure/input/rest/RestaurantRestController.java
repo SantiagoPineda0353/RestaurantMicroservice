@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/restaurants")
 @RequiredArgsConstructor
-public class UserRestController {
+public class RestaurantRestController {
 
     private final IRestaurantHandler restaurantHandler;
     @Operation(summary = "Crear restaurante")
