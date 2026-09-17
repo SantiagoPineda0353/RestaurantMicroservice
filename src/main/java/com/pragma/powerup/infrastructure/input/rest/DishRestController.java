@@ -3,6 +3,7 @@ package com.pragma.powerup.infrastructure.input.rest;
 import com.pragma.powerup.application.dto.request.SaveDishRequestDto;
 import com.pragma.powerup.application.dto.request.UpdateDishRequestDto;
 import com.pragma.powerup.application.handler.IDishHandler;
+import com.pragma.powerup.infrastructure.security.AuthenticationUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,7 +28,8 @@ public class DishRestController {
     })
     @PostMapping("/")
     public ResponseEntity<Void> saveDish(@RequestBody SaveDishRequestDto saveDishRequestDto) {
-        dishHandler.saveDish(saveDishRequestDto);
+        Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
+        dishHandler.saveDish(saveDishRequestDto,idOwner);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -39,7 +41,8 @@ public class DishRestController {
     })
     @PatchMapping("/{dishId}")
     public ResponseEntity<Void> updateDish(@PathVariable Long dishId, @RequestBody UpdateDishRequestDto updateDishRequestDto) {
-        dishHandler.updateDish(dishId,updateDishRequestDto);
+        Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
+        dishHandler.updateDish(dishId,updateDishRequestDto,idOwner);
         return ResponseEntity.ok().build();
     }
 }

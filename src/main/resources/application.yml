@@ -6,13 +6,18 @@ spring:
     url: jdbc:mysql://localhost:3306/restaurante
     username: root
     password:
-
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-appDescription: "Pragma Powerup"
-appVersion: "1.0.0"
+
+jwt:
+  secret:
+
+app:
+  appDescription: "Pragma Powerup"
+  appVersion: "1.0.0"
+
 adapters:
   userfeignclient:
     url: http://localhost:8081

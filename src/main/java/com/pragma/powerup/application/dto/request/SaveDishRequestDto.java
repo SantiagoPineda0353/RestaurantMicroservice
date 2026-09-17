@@ -12,5 +12,4 @@ public class SaveDishRequestDto {
     private String urlImage;
     private Long idCategory;
     private Long idRestaurant;
-    private Long idOwner;
 }
