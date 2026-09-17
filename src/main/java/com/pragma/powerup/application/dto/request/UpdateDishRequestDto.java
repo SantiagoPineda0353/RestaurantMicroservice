@@ -8,5 +8,4 @@ import lombok.Setter;
 public class UpdateDishRequestDto {
     private Integer price;
     private String description;
-    private Long idOwner;
 }
