@@ -36,6 +36,11 @@ public class RestaurantUseCase implements IRestaurantServicePort {
         userPersistencePort.saveRestaurant(restaurantModel);
     }
 
+    @Override
+    public RestaurantModel getRestaurantById(Long id) {
+        return userPersistencePort.getRestaurantById(id);
+    }
+
     private void validateName(String name){
         if (name==null || name.isBlank() ||numberPattern.matcher(name).matches()){
             throw new InvalidRestaurantNameException();
