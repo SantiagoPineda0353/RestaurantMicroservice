@@ -65,4 +65,13 @@ class RestaurantUseCaseTest {
         verify(restaurantPersistencePort, never()).saveRestaurant(any());
     }
 
+    @Test
+    void getRestaurantById_whenRestaurantExists_thenReturnRestaurant(){
+        when(restaurantPersistencePort.getRestaurantById(1L))
+                .thenReturn(restaurantModelValid);
+        RestaurantModel result=restaurantUseCase.getRestaurantById(1L);
+        assertEquals(restaurantModelValid.getId(),result.getId());
+        assertEquals(restaurantModelValid.getIdOwner(),result.getIdOwner());
+    }
+
 }

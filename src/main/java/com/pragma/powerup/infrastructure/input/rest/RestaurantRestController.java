@@ -1,6 +1,7 @@
 package com.pragma.powerup.infrastructure.input.rest;
 
 import com.pragma.powerup.application.dto.request.SaveRestaurantRequestDto;
+import com.pragma.powerup.application.dto.response.RestaurantResponseDto;
 import com.pragma.powerup.application.handler.IRestaurantHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,6 +28,11 @@ public class RestaurantRestController {
     public ResponseEntity<Void> saveOwner(@RequestBody SaveRestaurantRequestDto saveRestaurantRequestDto) {
         restaurantHandler.saveRestaurant(saveRestaurantRequestDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RestaurantResponseDto> getRestaurantById(@PathVariable Long id) {
+        return ResponseEntity.ok(restaurantHandler.getRestaurantById(id));
     }
 
 }
