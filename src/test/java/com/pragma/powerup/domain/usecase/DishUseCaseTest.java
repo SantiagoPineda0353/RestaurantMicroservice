@@ -155,4 +155,34 @@ class DishUseCaseTest {
         assertThrows(InvalidPriceException.class, () -> dishUseCase.updateDish(1L,"Test",-100,OWNER_ID));
         verify(dishPersistencePort,never()).updateDish(any());
     }
+
+    @Test
+    void changeDishStatus_whenValidOwner_thenUpdateActiveStatus(){
+        when(dishPersistencePort.getDishById(1L))
+                .thenReturn(existingDish);
+        when(restaurantPersistencePort.getRestaurantById(existingDish.getIdRestaurant()))
+                .thenReturn(validRestaurant);
+        dishUseCase.changeDishStatus(1L,false,OWNER_ID);
+        verify(dishPersistencePort).updateDish(any());
+        assertFalse(existingDish.getActive());
+    }
+
+    @Test
+    void changeDishStatus_whenDishNonExistent_thenThrowsException(){
+        when(dishPersistencePort.getDishById(99L))
+                .thenReturn(null);
+        assertThrows(DishNotFoundException.class, () -> dishUseCase.changeDishStatus(99L,false,OWNER_ID));
+        verify(dishPersistencePort,never()).updateDish(any());
+    }
+
+    @Test
+    void changeDishStatus_whenUserIsNotRestaurantOwner_thenThrowsException(){
+        when(dishPersistencePort.getDishById(1L))
+                .thenReturn(existingDish);
+        when(restaurantPersistencePort.getRestaurantById(existingDish.getIdRestaurant()))
+                .thenReturn(validRestaurant);
+        Long userNotOwner=999L;
+        assertThrows(UserNotRestaurantOwnerException.class, () -> dishUseCase.changeDishStatus(1L,false,userNotOwner));
+        verify(dishPersistencePort,never()).updateDish(any());
+    }
 }
