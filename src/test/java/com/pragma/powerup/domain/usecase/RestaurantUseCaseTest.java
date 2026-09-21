@@ -1,6 +1,7 @@
 package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.exception.*;
+import com.pragma.powerup.domain.model.PageModel;
 import com.pragma.powerup.domain.model.RestaurantModel;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -72,6 +75,27 @@ class RestaurantUseCaseTest {
         RestaurantModel result=restaurantUseCase.getRestaurantById(1L);
         assertEquals(restaurantModelValid.getId(),result.getId());
         assertEquals(restaurantModelValid.getIdOwner(),result.getIdOwner());
+    }
+
+    @Test
+    void getAllRestaurants_whenValidPagination_thenReturnPage(){
+        List<RestaurantModel> restaurantList= List.of(restaurantModelValid);
+        PageModel<RestaurantModel> expectedPage= new PageModel<>(restaurantList,0,10,1,1);
+        when(restaurantPersistencePort.getAllRestaurants(0,10))
+                .thenReturn(expectedPage);
+        PageModel<RestaurantModel> result=restaurantUseCase.getAllRestaurants(0,10);
+        assertEquals(1,result.getTotalElements());
+        assertEquals(restaurantModelValid,result.getContent().get(0));
+    }
+
+    @Test
+    void getAllRestaurants_whenNegativePageNumber_thenThrowsException(){
+        assertThrows(InvalidPaginationException.class, () ->restaurantUseCase.getAllRestaurants(-1,10));
+    }
+
+    @Test
+    void getAllRestaurants_whenPageSizeIsZero_thenThrowsException(){
+        assertThrows(InvalidPaginationException.class, () ->restaurantUseCase.getAllRestaurants(0,0));
     }
 
 }

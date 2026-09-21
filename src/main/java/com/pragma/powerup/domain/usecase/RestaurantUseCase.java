@@ -2,6 +2,7 @@ package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.api.IRestaurantServicePort;
 import com.pragma.powerup.domain.exception.*;
+import com.pragma.powerup.domain.model.PageModel;
 import com.pragma.powerup.domain.model.RestaurantModel;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
@@ -14,11 +15,11 @@ public class RestaurantUseCase implements IRestaurantServicePort {
     private static final Pattern numberPattern=Pattern.compile("^\\d+$");
     private static final Pattern nitPattern=Pattern.compile("^\\d+$");
 
-    private final IRestaurantPersistencePort userPersistencePort;
+    private final IRestaurantPersistencePort restaurantPersistencePort;
     private final IUserValidationPort userValidationPort;
 
-    public RestaurantUseCase(IRestaurantPersistencePort userPersistencePort, IUserValidationPort userValidationPort) {
-        this.userPersistencePort = userPersistencePort;
+    public RestaurantUseCase(IRestaurantPersistencePort restaurantPersistencePort, IUserValidationPort userValidationPort) {
+        this.restaurantPersistencePort = restaurantPersistencePort;
         this.userValidationPort = userValidationPort;
     }
 
@@ -33,12 +34,20 @@ public class RestaurantUseCase implements IRestaurantServicePort {
             throw new UserNotOwnerException();
         }
 
-        userPersistencePort.saveRestaurant(restaurantModel);
+        restaurantPersistencePort.saveRestaurant(restaurantModel);
     }
 
     @Override
     public RestaurantModel getRestaurantById(Long id) {
-        return userPersistencePort.getRestaurantById(id);
+        return restaurantPersistencePort.getRestaurantById(id);
+    }
+
+    @Override
+    public PageModel<RestaurantModel> getAllRestaurants(int pageNumber, int pageSize) {
+        if(pageNumber<0 || pageSize <=0){
+            throw new InvalidPaginationException();
+        }
+        return restaurantPersistencePort.getAllRestaurants(pageNumber,pageSize);
     }
 
     private void validateName(String name){
