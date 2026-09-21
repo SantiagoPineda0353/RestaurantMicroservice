@@ -1,5 +1,6 @@
 package com.pragma.powerup.infrastructure.input.rest;
 
+import com.pragma.powerup.application.dto.request.ChangeDishStatusRequestDto;
 import com.pragma.powerup.application.dto.request.SaveDishRequestDto;
 import com.pragma.powerup.application.dto.request.UpdateDishRequestDto;
 import com.pragma.powerup.application.handler.IDishHandler;
@@ -43,6 +44,19 @@ public class DishRestController {
     public ResponseEntity<Void> updateDish(@PathVariable Long dishId, @RequestBody UpdateDishRequestDto updateDishRequestDto) {
         Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
         dishHandler.updateDish(dishId,updateDishRequestDto,idOwner);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Actualizar estado del plato")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Plato Actualizado", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos de plato incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Plato no encontrado", content = @Content)
+    })
+    @PatchMapping("/{dishId}/status")
+    public ResponseEntity<Void> changeDishStatus(@PathVariable Long dishId, @RequestBody ChangeDishStatusRequestDto changeDishStatusRequestDto) {
+        Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
+        dishHandler.changeDishStatus(dishId,changeDishStatusRequestDto,idOwner);
         return ResponseEntity.ok().build();
     }
 }
