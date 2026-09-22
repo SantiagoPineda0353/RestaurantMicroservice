@@ -6,6 +6,12 @@ public class AuthenticationUtils {
     private AuthenticationUtils() {
     }
     public static Long getAuthenticatedUserId(){
-        return (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return getAuthenticatedUser().getId();
+    }
+    public static Long getAuthenticatedUserRestaurantID(){
+        return getAuthenticatedUser().getIdRestaurant();
+    }
+    private static AuthenticatedUser getAuthenticatedUser(){
+        return (AuthenticatedUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }

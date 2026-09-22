@@ -33,6 +33,10 @@ public class JwtUtil {
                 .orElse(false);
     }
 
+    public Long extractIdRestaurant(String token){
+        return extractAllClaims(token).get("idRestaurant",Long.class);
+    }
+
     private Optional<Claims> extractAllClaimsSafely(String token) {
         try {
             return Optional.of(extractAllClaims(token));

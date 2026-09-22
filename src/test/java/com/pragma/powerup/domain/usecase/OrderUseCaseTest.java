@@ -4,6 +4,7 @@ import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.domain.model.DishModel;
 import com.pragma.powerup.domain.model.OrderDishModel;
 import com.pragma.powerup.domain.model.OrderModel;
+import com.pragma.powerup.domain.model.PageModel;
 import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.domain.spi.IOrderPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,5 +103,27 @@ class OrderUseCaseTest {
 
         assertThrows(DishesFromDifferentRestaurantsException.class, () ->orderUseCase.saveOrder(validOrder,CLIENT_ID));
         verify(orderPersistencePort, never()).saveOrder(any());
+    }
+
+    @Test
+    void getOrdersByStatus_whenValidData_thenReturnPage(){
+        List<OrderModel> orderList= List.of(validOrder);
+        PageModel<OrderModel> expectedPage= new PageModel<>(orderList,0,10,1,1);
+        when(orderPersistencePort.getOrdersByRestaurantAndStatus(5L,"PENDIENTE",0,10))
+                .thenReturn(expectedPage);
+        PageModel<OrderModel> result=orderUseCase.getOrdersByRestaurantAndStatus(5L,"PENDIENTE",0,10);
+        assertEquals(1,result.getTotalElements());
+    }
+
+    @Test
+    void getOrdersByStatus_whenInvalidStatus_thenThrowsException(){
+        assertThrows(InvalidOrderStatusException.class,
+                () ->orderUseCase.getOrdersByRestaurantAndStatus(5L,"ESTADO_1232",0,10));
+    }
+
+    @Test
+    void getOrdersByStatus_whenInvalidPagination_thenThrowsException(){
+        assertThrows(InvalidPaginationException.class,
+                () ->orderUseCase.getOrdersByRestaurantAndStatus(5L,"PENDIENTE",-1,10));
     }
 }

@@ -36,9 +36,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (jwtUtil.isTokenValid(token)&&SecurityContextHolder.getContext().getAuthentication()==null){
             Long userId =jwtUtil.extractUserId(token);
             Long idRole= jwtUtil.extractIdRole(token);
+            Long idRestaurant=jwtUtil.extractIdRestaurant(token);
             RoleEnum role = RoleEnum.fromId(idRole);
+            AuthenticatedUser authenticatedUser=new AuthenticatedUser(userId,idRestaurant);
             var authorities = List.of(new SimpleGrantedAuthority("ROLE_"+role.name()));
-            var authToken =new UsernamePasswordAuthenticationToken(userId,null,authorities);
+            var authToken =new UsernamePasswordAuthenticationToken(authenticatedUser,null,authorities);
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
