@@ -31,6 +31,7 @@ public class SecurityConfig {
                     .antMatchers(HttpMethod.PATCH , "/api/v1/dishes/*/status").hasRole(ROL2)
                     .antMatchers(HttpMethod.GET , "/api/v1/restaurants/").hasRole(ROL4)
                     .antMatchers(HttpMethod.GET , "/api/v1/dishes/restaurant/**").hasRole(ROL4)
+                    .antMatchers(HttpMethod.GET , "/api/v1/orders/").hasRole("EMPLEADO")
                     .antMatchers(HttpMethod.POST , "/api/v1/orders/**").hasRole(ROL4)
                     .anyRequest().authenticated()
                 .and()

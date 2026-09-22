@@ -1,13 +1,20 @@
 package com.pragma.powerup.infrastructure.out.jpa.adapter;
 
+import com.pragma.powerup.domain.model.DishModel;
 import com.pragma.powerup.domain.model.OrderDishModel;
 import com.pragma.powerup.domain.model.OrderModel;
+import com.pragma.powerup.domain.model.PageModel;
 import com.pragma.powerup.domain.spi.IOrderPersistencePort;
+import com.pragma.powerup.infrastructure.out.jpa.entity.DishEntity;
 import com.pragma.powerup.infrastructure.out.jpa.entity.OrderDishEntity;
 import com.pragma.powerup.infrastructure.out.jpa.entity.OrderEntity;
 import com.pragma.powerup.infrastructure.out.jpa.mapper.IOrderEntityMapper;
 import com.pragma.powerup.infrastructure.out.jpa.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,5 +50,15 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
     @Override
     public boolean existsActiveOrderByClient(Long idClient) {
         return orderRepository.existsActiveOrderByClient(idClient);
+    }
+
+    @Override
+    public PageModel<OrderModel> getOrdersByRestaurantAndStatus(Long idRestaurant, String status, int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber,pageSize, Sort.by("date").ascending());
+        Page<OrderEntity> entityPage= orderRepository.findByIdRestaurantAndStatus(idRestaurant,status,pageable);
+        List<OrderModel> content=entityPage.getContent().stream()
+                .map((orderEntityMapper::toModel))
+                .collect(Collectors.toList());
+        return new PageModel<>(content,entityPage.getNumber(),entityPage.getSize(),entityPage.getTotalElements(),entityPage.getTotalPages());
     }
 }
