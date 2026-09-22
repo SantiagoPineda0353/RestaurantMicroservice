@@ -3,6 +3,7 @@ package com.pragma.powerup.domain.usecase;
 import com.pragma.powerup.domain.api.IDishServicePort;
 import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.domain.model.DishModel;
+import com.pragma.powerup.domain.model.PageModel;
 import com.pragma.powerup.domain.model.RestaurantModel;
 import com.pragma.powerup.domain.spi.ICategoryPersistencePort;
 import com.pragma.powerup.domain.spi.IDishPersistencePort;
@@ -76,6 +77,18 @@ public class DishUseCase implements IDishServicePort {
 
         dish.setActive(active);
         dishPersistencePort.updateDish(dish);
+    }
+
+    @Override
+    public PageModel<DishModel> getDishesByRestaurant(Long idRestaurant, int pageNumber, int pageSize) {
+        if(pageNumber<0 || pageSize <=0){
+            throw new InvalidPaginationException();
+        }
+        RestaurantModel restaurant=restaurantPersistencePort.getRestaurantById(idRestaurant);
+        if(restaurant==null){
+            throw new RestaurantNotFoundException();
+        }
+        return dishPersistencePort.getDishesByRestaurant(idRestaurant,pageNumber,pageSize);
     }
 
     private void validateName(String name){

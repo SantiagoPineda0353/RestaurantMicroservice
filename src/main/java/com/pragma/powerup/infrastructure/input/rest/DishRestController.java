@@ -3,6 +3,8 @@ package com.pragma.powerup.infrastructure.input.rest;
 import com.pragma.powerup.application.dto.request.ChangeDishStatusRequestDto;
 import com.pragma.powerup.application.dto.request.SaveDishRequestDto;
 import com.pragma.powerup.application.dto.request.UpdateDishRequestDto;
+import com.pragma.powerup.application.dto.response.DishSummaryResponseDto;
+import com.pragma.powerup.application.dto.response.PageResponseDto;
 import com.pragma.powerup.application.handler.IDishHandler;
 import com.pragma.powerup.infrastructure.security.AuthenticationUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,5 +60,17 @@ public class DishRestController {
         Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
         dishHandler.changeDishStatus(dishId,changeDishStatusRequestDto,idOwner);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Obtener platos por restaurante")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Platos Obtenidos", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos  incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Platos no encontrados", content = @Content)
+    })
+    @GetMapping("/restaurant/{idRestaurant}")
+    public ResponseEntity<PageResponseDto<DishSummaryResponseDto>> getDishesByRestaurant(@PathVariable Long idRestaurant, @RequestParam(defaultValue = "0")int page,
+                                                                                         @RequestParam(defaultValue = "10")int size) {
+        return ResponseEntity.ok(dishHandler.getDishesByRestaurant(idRestaurant,page,size));
     }
 }
