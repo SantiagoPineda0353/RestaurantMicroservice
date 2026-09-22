@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private static final String ROL2="PROPIETARIO";
+    private static final String ROL4="CLIENTE";
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http
@@ -28,8 +29,9 @@ public class SecurityConfig {
                     .antMatchers(HttpMethod.PATCH , "/api/v1/dishes/**").hasRole(ROL2)
                     .antMatchers(HttpMethod.GET , "/api/v1/restaurants/*").permitAll()
                     .antMatchers(HttpMethod.PATCH , "/api/v1/dishes/*/status").hasRole(ROL2)
-                    .antMatchers(HttpMethod.GET , "/api/v1/restaurants/").hasRole("CLIENTE")
-                    .antMatchers(HttpMethod.GET , "/api/v1/dishes/restaurant/**").hasRole("CLIENTE")
+                    .antMatchers(HttpMethod.GET , "/api/v1/restaurants/").hasRole(ROL4)
+                    .antMatchers(HttpMethod.GET , "/api/v1/dishes/restaurant/**").hasRole(ROL4)
+                    .antMatchers(HttpMethod.POST , "/api/v1/orders/**").hasRole(ROL4)
                     .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
