@@ -1,6 +1,8 @@
 package com.pragma.powerup.infrastructure.input.rest;
 
 import com.pragma.powerup.application.dto.request.SaveOrderRequestDto;
+import com.pragma.powerup.application.dto.response.OrderSummaryResponseDto;
+import com.pragma.powerup.application.dto.response.PageResponseDto;
 import com.pragma.powerup.application.handler.IOrderHandler;
 import com.pragma.powerup.infrastructure.security.AuthenticationUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,4 +34,16 @@ public class OrderRestController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Obtener Ordenes por restaurante")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Ordenes Obtenidas", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Ordenes no encontradas", content = @Content)
+    })
+    @GetMapping("/")
+    public ResponseEntity<PageResponseDto<OrderSummaryResponseDto>> getDishesByRestaurant(@RequestParam String status, @RequestParam(defaultValue = "0")int page,
+                                                                                          @RequestParam(defaultValue = "10")int size) {
+        Long idRestaurant = AuthenticationUtils.getAuthenticatedUserRestaurantID();
+        return ResponseEntity.ok(orderHandler.getOrdersByStatus(idRestaurant,status,page,size));
+    }
 }

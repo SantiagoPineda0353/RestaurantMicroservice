@@ -54,11 +54,28 @@ public class OrderUseCase implements IOrderServicePort {
         orderPersistencePort.saveOrder(newOrder);
     }
 
+    @Override
+    public PageModel<OrderModel> getOrdersByRestaurantAndStatus(Long idRestaurant, String status, int pageNumber, int pageSize) {
+        if(pageNumber<0 || pageSize <=0){
+            throw new InvalidPaginationException();
+        }
+        validateStatus(status);
+        return orderPersistencePort.getOrdersByRestaurantAndStatus(idRestaurant,status,pageNumber,pageSize);
+    }
+
     private void validateQuantity(OrderModel orderModel){
         for(OrderDishModel dish :orderModel.getDishes()){
             if (dish.getQuantity() ==null|| dish.getQuantity()<=0){
                 throw new InvalidQuantityException();
             }
+        }
+    }
+
+    private void validateStatus(String status){
+        try{
+            OrderStatus.valueOf(status);
+        }catch (IllegalArgumentException ex){
+            throw new InvalidOrderStatusException();
         }
     }
 }
