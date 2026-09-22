@@ -2,6 +2,7 @@ package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.domain.model.DishModel;
+import com.pragma.powerup.domain.model.PageModel;
 import com.pragma.powerup.domain.model.RestaurantModel;
 import com.pragma.powerup.domain.spi.ICategoryPersistencePort;
 import com.pragma.powerup.domain.spi.IDishPersistencePort;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -184,5 +187,29 @@ class DishUseCaseTest {
         Long userNotOwner=999L;
         assertThrows(UserNotRestaurantOwnerException.class, () -> dishUseCase.changeDishStatus(1L,false,userNotOwner));
         verify(dishPersistencePort,never()).updateDish(any());
+    }
+
+    @Test
+    void getDishesByRestaurant_whenValidPagination_thenReturnPage(){
+        List<DishModel> dishList= List.of(existingDish);
+        PageModel<DishModel> expectedPage= new PageModel<>(dishList,0,10,1,1);
+        when(restaurantPersistencePort.getRestaurantById(1L))
+                .thenReturn(validRestaurant);
+        when(dishPersistencePort.getDishesByRestaurant(1L,0,10))
+                .thenReturn(expectedPage);
+        PageModel<DishModel> result=dishUseCase.getDishesByRestaurant(1L,0,10);
+        assertEquals(1,result.getTotalElements());
+    }
+
+    @Test
+    void getDishesByRestaurant_whenRestaurantNonExistent_thenThrowsException(){
+        when(restaurantPersistencePort.getRestaurantById(99L))
+                .thenReturn(null);
+        assertThrows(RestaurantNotFoundException.class, () ->dishUseCase.getDishesByRestaurant(99L,0,10));
+    }
+
+    @Test
+    void getDishesByRestaurant_whenInvalidPagination_thenThrowsException(){
+        assertThrows(InvalidPaginationException.class, () ->dishUseCase.getDishesByRestaurant(1L,0,-5));
     }
 }

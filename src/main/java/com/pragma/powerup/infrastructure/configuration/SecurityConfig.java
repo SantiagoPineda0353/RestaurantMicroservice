@@ -29,7 +29,7 @@ public class SecurityConfig {
                     .antMatchers(HttpMethod.GET , "/api/v1/restaurants/*").permitAll()
                     .antMatchers(HttpMethod.PATCH , "/api/v1/dishes/*/status").hasRole(ROL2)
                     .antMatchers(HttpMethod.GET , "/api/v1/restaurants/").hasRole("CLIENTE")
-
+                    .antMatchers(HttpMethod.GET , "/api/v1/dishes/restaurant/**").hasRole("CLIENTE")
                     .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
