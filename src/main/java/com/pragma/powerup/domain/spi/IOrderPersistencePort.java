@@ -7,4 +7,6 @@ public interface IOrderPersistencePort {
     OrderModel saveOrder(OrderModel orderModel);
     boolean existsActiveOrderByClient(Long idClient);
     PageModel<OrderModel> getOrdersByRestaurantAndStatus(Long idRestaurant,String status, int pageNumber, int pageSize);
+    OrderModel getOrderById(Long id);
+    void updateOrder(OrderModel orderModel);
 }

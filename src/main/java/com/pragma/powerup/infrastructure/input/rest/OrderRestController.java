@@ -46,4 +46,17 @@ public class OrderRestController {
         Long idRestaurant = AuthenticationUtils.getAuthenticatedUserRestaurantID();
         return ResponseEntity.ok(orderHandler.getOrdersByStatus(idRestaurant,status,page,size));
     }
+
+    @Operation(summary = "Asignar Orden")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Orden asignada", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos de orden incorrectos", content = @Content)
+    })
+    @PatchMapping("/{orderId}/assign")
+    public ResponseEntity<Void> assignOrder(@PathVariable Long orderId) {
+        Long idEmployee = AuthenticationUtils.getAuthenticatedUserId();
+        Long idEmployeeRestaurant = AuthenticationUtils.getAuthenticatedUserRestaurantID();
+        orderHandler.assignOrder(orderId,idEmployee,idEmployeeRestaurant);
+        return ResponseEntity.ok().build();
+    }
 }

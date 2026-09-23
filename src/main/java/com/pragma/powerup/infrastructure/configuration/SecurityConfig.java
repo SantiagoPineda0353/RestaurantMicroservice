@@ -33,6 +33,7 @@ public class SecurityConfig {
                     .antMatchers(HttpMethod.GET , "/api/v1/dishes/restaurant/**").hasRole(ROL4)
                     .antMatchers(HttpMethod.GET , "/api/v1/orders/").hasRole("EMPLEADO")
                     .antMatchers(HttpMethod.POST , "/api/v1/orders/**").hasRole(ROL4)
+                    .antMatchers(HttpMethod.PATCH , "/api/v1/orders/*/assign").hasRole("EMPLEADO")
                     .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
