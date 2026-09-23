@@ -125,6 +125,35 @@ public class OrderUseCase implements IOrderServicePort {
         traceabilityPort.registerStatusChange(orderId, order.getIdClient(), clientEmail,previousStatus,OrderStatus.LISTO.name(),idEmployee,employeeEmail);
     }
 
+    @Override
+    public void deliverOrder(Long orderId,String securityPin, Long idEmployee, Long idEmployeeRestaurant) {
+        OrderModel order = orderPersistencePort.getOrderById(orderId);
+        if(order==null){
+            throw new OrderNotFoundException();
+        }
+        if(!OrderStatus.LISTO.name().equals(order.getStatus())){
+            throw new OrderNotReadyException();
+        }
+        if(!order.getIdRestaurant().equals(idEmployeeRestaurant)){
+            throw new EmployeeNotFromOrderRestaurantException();
+        }
+        if(!idEmployee.equals(order.getIdChef())){
+            throw new EmployeeNotAssignedToOrderRestaurantException();
+        }
+        if(!order.getSecurityPin().equals(securityPin)){
+            throw new InvalidSecurityPinException();
+        }
+
+        String previousStatus = order.getStatus();
+        order.setStatus(OrderStatus.ENTREGADO.name());
+        orderPersistencePort.updateOrder(order);
+
+        String clientEmail = userInfoPort.getUserEmail(order.getIdClient());
+        String employeeEmail= userInfoPort.getUserEmail(idEmployee);
+
+        traceabilityPort.registerStatusChange(orderId, order.getIdClient(), clientEmail,previousStatus,OrderStatus.ENTREGADO.name(),idEmployee,employeeEmail);
+    }
+
     private void validateQuantity(OrderModel orderModel){
         for(OrderDishModel dish :orderModel.getDishes()){
             if (dish.getQuantity() ==null|| dish.getQuantity()<=0){

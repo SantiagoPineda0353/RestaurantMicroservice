@@ -261,4 +261,63 @@ class OrderUseCaseTest {
                 () ->orderUseCase.notifyOrderReady(1L,differentEmployee,10L));
         verify(orderPersistencePort, never()).updateOrder(any());
     }
+
+    @Test
+    void deliverOrder_whenValidData_thenUpdateStatusToDelivered(){
+        OrderModel readyOrder= new OrderModel(1L,5L,null,"LISTO",3L,10L,
+                List.of(new OrderDishModel(1L,2)),"123456");
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(readyOrder);
+        when(userInfoPort.getUserEmail(5L))
+                .thenReturn("cliente@correo.com");
+        when(userInfoPort.getUserEmail(3L))
+                .thenReturn("empleado@correo.com");
+
+        orderUseCase.deliverOrder(1L,"123456",3L,10L);
+
+        verify(orderPersistencePort).updateOrder(any());
+        verify(traceabilityPort).registerStatusChange(1L,5L,"cliente@correo.com",
+                "LISTO","ENTREGADO",3L,"empleado@correo.com");
+        assertEquals("ENTREGADO",readyOrder.getStatus());
+    }
+
+    @Test
+    void deliverOrder_whenOrderNotReady_thenThrowsException(){
+        OrderModel inPreparationOrder= new OrderModel(1L,5L,null,"EN_PREPARACION",3L,10L,
+                List.of(new OrderDishModel(1L,2)),null);
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(inPreparationOrder);
+
+        assertThrows(OrderNotReadyException.class, () ->orderUseCase.deliverOrder(1L,"123456",3L,10L));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void deliverOrder_whenPinDoesNotMatch_thenThrowsException(){
+        OrderModel readyOrder= new OrderModel(1L,5L,null,"LISTO",3L,10L,
+                List.of(new OrderDishModel(1L,2)),"123456");
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(readyOrder);
+
+        assertThrows(InvalidSecurityPinException.class, () ->orderUseCase.deliverOrder(1L,"321232",3L,10L));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void deliverOrder_whenEmployeeNotAssigned_thenThrowsException(){
+        OrderModel readyOrder= new OrderModel(1L,5L,null,"LISTO",3L,10L,
+                List.of(new OrderDishModel(1L,2)),"123456");
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(readyOrder);
+
+        Long differentEmployee=999L;
+
+        assertThrows(EmployeeNotAssignedToOrderRestaurantException.class,
+                () ->orderUseCase.deliverOrder(1L,"123456",differentEmployee,10L));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
 }
