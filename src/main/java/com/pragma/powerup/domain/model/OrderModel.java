@@ -20,4 +20,5 @@ public class OrderModel {
     private Long idChef;
     private Long idRestaurant;
     private List<OrderDishModel> dishes;
+    private String securityPin;
 }

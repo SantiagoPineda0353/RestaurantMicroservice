@@ -5,10 +5,7 @@ import com.pragma.powerup.domain.model.DishModel;
 import com.pragma.powerup.domain.model.OrderDishModel;
 import com.pragma.powerup.domain.model.OrderModel;
 import com.pragma.powerup.domain.model.PageModel;
-import com.pragma.powerup.domain.spi.IDishPersistencePort;
-import com.pragma.powerup.domain.spi.IOrderPersistencePort;
-import com.pragma.powerup.domain.spi.ITraceabilityPort;
-import com.pragma.powerup.domain.spi.IUserInfoPort;
+import com.pragma.powerup.domain.spi.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +29,8 @@ class OrderUseCaseTest {
     private IUserInfoPort userInfoPort;
     @Mock
     private ITraceabilityPort traceabilityPort;
+    @Mock
+    private IMessagingPort messagingPort;
 
     @InjectMocks
     private OrderUseCase orderUseCase;
@@ -47,7 +46,7 @@ class OrderUseCaseTest {
                 new OrderDishModel(1L,2),
                 new OrderDishModel(2L,1)
         );
-        validOrder= new OrderModel(null,null,null,null,null,null,dishes);
+        validOrder= new OrderModel(null,null,null,null,null,null,dishes,null);
 
         dish1= new DishModel(1L,"Changua",35000,"Sopa tipica","url",1L,5L,true);
         dish2= new DishModel(2L,"Bandeja paisa",30000,"Palto tipico","url",1L,5L,true);
@@ -136,7 +135,7 @@ class OrderUseCaseTest {
     @Test
     void assignOrder_whenValidData_thenUpdateStatusAndRegisterTraceability(){
         OrderModel pendingOrder= new OrderModel(1L,5L,null,"PENDIENTE",null,10L,
-                List.of(new OrderDishModel(1L,2)));
+                List.of(new OrderDishModel(1L,2)),null);
 
         when(orderPersistencePort.getOrderById(1L))
                 .thenReturn(pendingOrder);
@@ -165,7 +164,7 @@ class OrderUseCaseTest {
     @Test
     void assignOrder_whenOrderNotPending_thenThrowsException(){
         OrderModel inPreparationOrder= new OrderModel(1L,5L,null,"EN_PREPARACION",2L,10L,
-                List.of(new OrderDishModel(1L,2)));
+                List.of(new OrderDishModel(1L,2)),null);
 
         when(orderPersistencePort.getOrderById(1L))
                 .thenReturn(inPreparationOrder);
@@ -177,7 +176,7 @@ class OrderUseCaseTest {
     @Test
     void assignOrder_whenEmployeeFromDifferentRestaurant_thenThrowsException(){
         OrderModel pendingOrder= new OrderModel(1L,5L,null,"PENDIENTE",null,10L,
-                List.of(new OrderDishModel(1L,2)));
+                List.of(new OrderDishModel(1L,2)),null);
 
         when(orderPersistencePort.getOrderById(1L))
                 .thenReturn(pendingOrder);
@@ -186,6 +185,80 @@ class OrderUseCaseTest {
 
         assertThrows(EmployeeNotFromOrderRestaurantException.class,
                 () ->orderUseCase.assignOrder(1L,3L,otherRestaurantId));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void notifyOrderReady_whenValidData_thenUpdateStatusGeneratePinAndNotify(){
+        OrderModel inPreparationOrder= new OrderModel(1L,5L,null,"EN_PREPARACION",3L,10L,
+                List.of(new OrderDishModel(1L,2)),null);
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(inPreparationOrder);
+        when(userInfoPort.getUserPhone(5L))
+                .thenReturn("+573154768909");
+        when(userInfoPort.getUserEmail(5L))
+                .thenReturn("cliente@correo.com");
+        when(userInfoPort.getUserEmail(3L))
+                .thenReturn("empleado@correo.com");
+
+        orderUseCase.notifyOrderReady(1L,3L,10L);
+
+        verify(orderPersistencePort).updateOrder(any());
+        verify(messagingPort).sendReadyOrderSms(eq("+573154768909"),any());
+        verify(traceabilityPort).registerStatusChange(1L,5L,"cliente@correo.com", "EN_PREPARACION","LISTO",3L,"empleado@correo.com");
+        assertEquals("LISTO",inPreparationOrder.getStatus());
+        assertNotNull(inPreparationOrder.getSecurityPin());
+        assertEquals(6,inPreparationOrder.getSecurityPin().length());
+    }
+
+    @Test
+    void notifyOrderReady_whenOrderNonExistent_thenThrowsException(){
+        when(orderPersistencePort.getOrderById(99L))
+                .thenReturn(null);
+        assertThrows(OrderNotFoundException.class, () ->orderUseCase.notifyOrderReady(99L,3L,10L));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void notifyOrderReady_whenOrderNotInPreparation_thenThrowsException(){
+        OrderModel pendingOrder= new OrderModel(1L,5L,null,"PENDIENTE",null,10L,
+                List.of(new OrderDishModel(1L,2)),null);
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(pendingOrder);
+
+        assertThrows(OrderNotInPreparationException.class, () ->orderUseCase.notifyOrderReady(1L,3L,10L));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void notifyOrderReady_whenEmployeeFromDifferentRestaurant_thenThrowsException(){
+        OrderModel inPreparationOrder= new OrderModel(1L,5L,null,"EN_PREPARACION",3L,10L,
+                List.of(new OrderDishModel(1L,2)),null);
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(inPreparationOrder);
+
+        Long otherRestaurantId=999L;
+
+        assertThrows(EmployeeNotFromOrderRestaurantException.class,
+                () ->orderUseCase.notifyOrderReady(1L,3L,otherRestaurantId));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void notifyOrderReady_whenEmployeeNotAssignedToOrder_thenThrowsException(){
+        OrderModel inPreparationOrder= new OrderModel(1L,5L,null,"EN_PREPARACION",3L,10L,
+                List.of(new OrderDishModel(1L,2)),null);
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(inPreparationOrder);
+
+        Long differentEmployee=999L;
+
+        assertThrows(EmployeeNotAssignedToOrderRestaurantException.class,
+                () ->orderUseCase.notifyOrderReady(1L,differentEmployee,10L));
         verify(orderPersistencePort, never()).updateOrder(any());
     }
 }

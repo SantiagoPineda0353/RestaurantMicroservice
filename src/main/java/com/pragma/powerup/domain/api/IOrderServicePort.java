@@ -7,4 +7,5 @@ public interface IOrderServicePort {
     void saveOrder(OrderModel orderModel, Long idClient);
     PageModel<OrderModel> getOrdersByRestaurantAndStatus(Long idRestaurant,String status, int pageNumber, int pageSize);
     void assignOrder(Long orderId, Long idEmployee, Long idEmployeeRestaurant);
+    void notifyOrderReady(Long orderId, Long idEmployee, Long idEmployeeRestaurant);
 }

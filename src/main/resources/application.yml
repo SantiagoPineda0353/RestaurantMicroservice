@@ -23,3 +23,5 @@ adapters:
     url: http://localhost:8081
   traceabilityfeignclient:
     url: http://localhost:8083
+  messagingfeignclient:
+    url: http://localhost:8084

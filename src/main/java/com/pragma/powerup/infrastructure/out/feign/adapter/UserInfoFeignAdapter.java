@@ -13,4 +13,9 @@ public class UserInfoFeignAdapter implements IUserInfoPort {
     public String getUserEmail(Long userId) {
         return userFeignClient.getUserById(userId).getEmail();
     }
+
+    @Override
+    public String getUserPhone(Long userId) {
+        return userFeignClient.getUserById(userId).getCellphone();
+    }
 }

@@ -9,4 +9,5 @@ public class UserFeignResponseDto {
     private Long id;
     private int idRole;
     private String email;
+    private String cellphone;
 }
