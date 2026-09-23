@@ -8,4 +8,5 @@ public interface IOrderServicePort {
     PageModel<OrderModel> getOrdersByRestaurantAndStatus(Long idRestaurant,String status, int pageNumber, int pageSize);
     void assignOrder(Long orderId, Long idEmployee, Long idEmployeeRestaurant);
     void notifyOrderReady(Long orderId, Long idEmployee, Long idEmployeeRestaurant);
+    void deliverOrder(Long orderId,String securityPin, Long idEmployee, Long idEmployeeRestaurant);
 }

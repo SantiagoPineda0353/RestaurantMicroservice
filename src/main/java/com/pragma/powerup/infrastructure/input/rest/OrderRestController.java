@@ -1,5 +1,6 @@
 package com.pragma.powerup.infrastructure.input.rest;
 
+import com.pragma.powerup.application.dto.request.DeliverOrderRequestDto;
 import com.pragma.powerup.application.dto.request.SaveOrderRequestDto;
 import com.pragma.powerup.application.dto.response.OrderSummaryResponseDto;
 import com.pragma.powerup.application.dto.response.PageResponseDto;
@@ -70,6 +71,19 @@ public class OrderRestController {
         Long idEmployee = AuthenticationUtils.getAuthenticatedUserId();
         Long idEmployeeRestaurant = AuthenticationUtils.getAuthenticatedUserRestaurantID();
         orderHandler.notifyOrderReady(orderId,idEmployee,idEmployeeRestaurant);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Orden Entregada")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Orden Entregada", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Pin erroneo", content = @Content)
+    })
+    @PatchMapping("/{orderId}/deliver")
+    public ResponseEntity<Void> notifyOrderReady(@PathVariable Long orderId, @RequestBody DeliverOrderRequestDto deliverOrderRequestDto) {
+        Long idEmployee = AuthenticationUtils.getAuthenticatedUserId();
+        Long idEmployeeRestaurant = AuthenticationUtils.getAuthenticatedUserRestaurantID();
+        orderHandler.deliverOrder(orderId,deliverOrderRequestDto,idEmployee,idEmployeeRestaurant);
         return ResponseEntity.ok().build();
     }
 }
