@@ -44,4 +44,9 @@ public class OrderHandler implements IOrderHandler {
     public void assignOrder(Long orderId, Long idEmployee, Long idEmployeeRestaurant) {
         orderServicePort.assignOrder(orderId,idEmployee,idEmployeeRestaurant);
     }
+
+    @Override
+    public void notifyOrderReady(Long orderId, Long idEmployee, Long idEmployeeRestaurant) {
+        orderServicePort.notifyOrderReady(orderId,idEmployee,idEmployeeRestaurant);
+    }
 }

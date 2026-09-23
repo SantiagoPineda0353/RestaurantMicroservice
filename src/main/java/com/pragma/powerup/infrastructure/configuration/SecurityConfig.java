@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private static final String ROL2="PROPIETARIO";
+    private static final String ROL3="EMPLEADO";
     private static final String ROL4="CLIENTE";
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
@@ -31,9 +32,10 @@ public class SecurityConfig {
                     .antMatchers(HttpMethod.PATCH , "/api/v1/dishes/*/status").hasRole(ROL2)
                     .antMatchers(HttpMethod.GET , "/api/v1/restaurants/").hasRole(ROL4)
                     .antMatchers(HttpMethod.GET , "/api/v1/dishes/restaurant/**").hasRole(ROL4)
-                    .antMatchers(HttpMethod.GET , "/api/v1/orders/").hasRole("EMPLEADO")
+                    .antMatchers(HttpMethod.GET , "/api/v1/orders/").hasRole(ROL3)
                     .antMatchers(HttpMethod.POST , "/api/v1/orders/**").hasRole(ROL4)
-                    .antMatchers(HttpMethod.PATCH , "/api/v1/orders/*/assign").hasRole("EMPLEADO")
+                    .antMatchers(HttpMethod.PATCH , "/api/v1/orders/*/assign").hasRole(ROL3)
+                    .antMatchers(HttpMethod.PATCH , "/api/v1/orders/*/ready").hasRole(ROL3)
                     .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -59,4 +59,17 @@ public class OrderRestController {
         orderHandler.assignOrder(orderId,idEmployee,idEmployeeRestaurant);
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "Orden Lista")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Orden Lista", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos de orden incorrectos", content = @Content)
+    })
+    @PatchMapping("/{orderId}/ready")
+    public ResponseEntity<Void> notifyOrderReady(@PathVariable Long orderId) {
+        Long idEmployee = AuthenticationUtils.getAuthenticatedUserId();
+        Long idEmployeeRestaurant = AuthenticationUtils.getAuthenticatedUserRestaurantID();
+        orderHandler.notifyOrderReady(orderId,idEmployee,idEmployeeRestaurant);
+        return ResponseEntity.ok().build();
+    }
 }

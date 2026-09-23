@@ -37,4 +37,7 @@ public class OrderEntity {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<OrderDishEntity> dishes;
+
+    @Column(name="security_pin")
+    private String securityPin;
 }
