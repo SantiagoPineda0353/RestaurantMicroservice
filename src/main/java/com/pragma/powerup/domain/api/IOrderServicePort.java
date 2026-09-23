@@ -6,4 +6,5 @@ import com.pragma.powerup.domain.model.PageModel;
 public interface IOrderServicePort {
     void saveOrder(OrderModel orderModel, Long idClient);
     PageModel<OrderModel> getOrdersByRestaurantAndStatus(Long idRestaurant,String status, int pageNumber, int pageSize);
+    void assignOrder(Long orderId, Long idEmployee, Long idEmployeeRestaurant);
 }

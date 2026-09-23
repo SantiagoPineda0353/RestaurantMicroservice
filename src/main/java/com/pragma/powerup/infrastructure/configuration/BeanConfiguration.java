@@ -7,8 +7,11 @@ import com.pragma.powerup.domain.spi.*;
 import com.pragma.powerup.domain.usecase.DishUseCase;
 import com.pragma.powerup.domain.usecase.OrderUseCase;
 import com.pragma.powerup.domain.usecase.RestaurantUseCase;
+import com.pragma.powerup.infrastructure.out.feign.ITraceabilityFeignClient;
 import com.pragma.powerup.infrastructure.out.feign.IUserFeignClient;
+import com.pragma.powerup.infrastructure.out.feign.adapter.TraceabilityFeignAdapter;
 import com.pragma.powerup.infrastructure.out.feign.adapter.UserFeignAdapter;
+import com.pragma.powerup.infrastructure.out.feign.adapter.UserInfoFeignAdapter;
 import com.pragma.powerup.infrastructure.out.jpa.adapter.CategoryJpaAdapter;
 import com.pragma.powerup.infrastructure.out.jpa.adapter.DishJpaAdapter;
 import com.pragma.powerup.infrastructure.out.jpa.adapter.OrderJpaAdapter;
@@ -36,6 +39,7 @@ public class BeanConfiguration {
     private final ICategoryRepository categoryRepository;
     private final IOrderRepository orderRepository;
     private final IOrderEntityMapper orderEntityMapper;
+    private final ITraceabilityFeignClient traceabilityFeignClient;
 
     @Bean
     public IRestaurantServicePort restaurantServicePort(){
@@ -63,10 +67,19 @@ public class BeanConfiguration {
     }
     @Bean
     public IOrderServicePort orderServicePort(){
-        return new OrderUseCase(dishPersistencePort(),orderPersistencePort());
+        return new OrderUseCase(dishPersistencePort(),orderPersistencePort(),userInfoPort(),traceabilityPort());
     }
     @Bean
     public IOrderPersistencePort orderPersistencePort() {
         return new OrderJpaAdapter(orderRepository,orderEntityMapper);
     }
+    @Bean
+    IUserInfoPort userInfoPort(){
+        return new UserInfoFeignAdapter(userFeignClient);
+    }
+    @Bean
+    public ITraceabilityPort traceabilityPort(){
+        return  new TraceabilityFeignAdapter(traceabilityFeignClient);
+    }
+
 }

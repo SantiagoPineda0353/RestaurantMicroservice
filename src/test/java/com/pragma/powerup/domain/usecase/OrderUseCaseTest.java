@@ -7,6 +7,8 @@ import com.pragma.powerup.domain.model.OrderModel;
 import com.pragma.powerup.domain.model.PageModel;
 import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.domain.spi.IOrderPersistencePort;
+import com.pragma.powerup.domain.spi.ITraceabilityPort;
+import com.pragma.powerup.domain.spi.IUserInfoPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +28,10 @@ class OrderUseCaseTest {
     private IOrderPersistencePort orderPersistencePort;
     @Mock
     private IDishPersistencePort dishPersistencePort;
+    @Mock
+    private IUserInfoPort userInfoPort;
+    @Mock
+    private ITraceabilityPort traceabilityPort;
 
     @InjectMocks
     private OrderUseCase orderUseCase;
@@ -125,5 +131,61 @@ class OrderUseCaseTest {
     void getOrdersByStatus_whenInvalidPagination_thenThrowsException(){
         assertThrows(InvalidPaginationException.class,
                 () ->orderUseCase.getOrdersByRestaurantAndStatus(5L,"PENDIENTE",-1,10));
+    }
+
+    @Test
+    void assignOrder_whenValidData_thenUpdateStatusAndRegisterTraceability(){
+        OrderModel pendingOrder= new OrderModel(1L,5L,null,"PENDIENTE",null,10L,
+                List.of(new OrderDishModel(1L,2)));
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(pendingOrder);
+        when(userInfoPort.getUserEmail(5L))
+                .thenReturn("cliente@correo.com");
+        when(userInfoPort.getUserEmail(3L))
+                .thenReturn("empleado@correo.com");
+
+        orderUseCase.assignOrder(1L,3L,10L);
+
+        verify(orderPersistencePort).updateOrder(any());
+        verify(traceabilityPort).registerStatusChange(1L,5L,"cliente@correo.com",
+                "PENDIENTE","EN_PREPARACION",3L,"empleado@correo.com");
+        assertEquals("EN_PREPARACION",pendingOrder.getStatus());
+        assertEquals(3L,pendingOrder.getIdChef());
+    }
+
+    @Test
+    void assignOrder_whenOrderNonExistent_thenThrowsException(){
+        when(orderPersistencePort.getOrderById(99L))
+                .thenReturn(null);
+        assertThrows(OrderNotFoundException.class, () ->orderUseCase.assignOrder(99L,3L,10L));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void assignOrder_whenOrderNotPending_thenThrowsException(){
+        OrderModel inPreparationOrder= new OrderModel(1L,5L,null,"EN_PREPARACION",2L,10L,
+                List.of(new OrderDishModel(1L,2)));
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(inPreparationOrder);
+
+        assertThrows(OrderNotPendingException.class, () ->orderUseCase.assignOrder(1L,3L,10L));
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void assignOrder_whenEmployeeFromDifferentRestaurant_thenThrowsException(){
+        OrderModel pendingOrder= new OrderModel(1L,5L,null,"PENDIENTE",null,10L,
+                List.of(new OrderDishModel(1L,2)));
+
+        when(orderPersistencePort.getOrderById(1L))
+                .thenReturn(pendingOrder);
+
+        Long otherRestaurantId=999L;
+
+        assertThrows(EmployeeNotFromOrderRestaurantException.class,
+                () ->orderUseCase.assignOrder(1L,3L,otherRestaurantId));
+        verify(orderPersistencePort, never()).updateOrder(any());
     }
 }

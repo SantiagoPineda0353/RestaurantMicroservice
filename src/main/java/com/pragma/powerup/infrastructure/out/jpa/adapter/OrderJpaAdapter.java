@@ -1,5 +1,6 @@
 package com.pragma.powerup.infrastructure.out.jpa.adapter;
 
+import com.pragma.powerup.domain.exception.OrderNotFoundException;
 import com.pragma.powerup.domain.model.DishModel;
 import com.pragma.powerup.domain.model.OrderDishModel;
 import com.pragma.powerup.domain.model.OrderModel;
@@ -60,5 +61,21 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
                 .map((orderEntityMapper::toModel))
                 .collect(Collectors.toList());
         return new PageModel<>(content,entityPage.getNumber(),entityPage.getSize(),entityPage.getTotalElements(),entityPage.getTotalPages());
+    }
+
+    @Override
+    public OrderModel getOrderById(Long id) {
+        return orderRepository.findById(id)
+                .map(orderEntityMapper::toModel)
+                .orElse(null);
+    }
+
+    @Override
+    public void updateOrder(OrderModel orderModel) {
+        OrderEntity managedEntity = orderRepository.findById(orderModel.getId())
+                        .orElseThrow(OrderNotFoundException::new);
+        managedEntity.setStatus(orderModel.getStatus());
+        managedEntity.setIdChef(orderModel.getIdChef());
+        orderRepository.save(managedEntity);
     }
 }

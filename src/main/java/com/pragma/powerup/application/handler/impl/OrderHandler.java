@@ -39,4 +39,9 @@ public class OrderHandler implements IOrderHandler {
 
         return new PageResponseDto<>(content,pageModel.getPageNumber(),pageModel.getPageSize(),pageModel.getTotalElements(),pageModel.getTotalPages());
     }
+
+    @Override
+    public void assignOrder(Long orderId, Long idEmployee, Long idEmployeeRestaurant) {
+        orderServicePort.assignOrder(orderId,idEmployee,idEmployeeRestaurant);
+    }
 }

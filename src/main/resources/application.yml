@@ -21,3 +21,5 @@ app:
 adapters:
   userfeignclient:
     url: http://localhost:8081
+  traceabilityfeignclient:
+    url: http://localhost:8083

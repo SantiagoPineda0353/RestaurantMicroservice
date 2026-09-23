@@ -5,6 +5,9 @@ import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.domain.model.*;
 import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.domain.spi.IOrderPersistencePort;
+import com.pragma.powerup.domain.spi.ITraceabilityPort;
+import com.pragma.powerup.domain.spi.IUserInfoPort;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -15,11 +18,15 @@ public class OrderUseCase implements IOrderServicePort {
 
     private final IDishPersistencePort dishPersistencePort;
     private final IOrderPersistencePort orderPersistencePort;
+    private final IUserInfoPort userInfoPort;
+    private final ITraceabilityPort traceabilityPort;
     private static final ZoneId ZONE_ID= ZoneId.of("America/Bogota");
 
-    public OrderUseCase(IDishPersistencePort dishPersistencePort , IOrderPersistencePort orderPersistencePort) {
+    public OrderUseCase(IDishPersistencePort dishPersistencePort , IOrderPersistencePort orderPersistencePort, IUserInfoPort userInfoPort, ITraceabilityPort traceabilityPort) {
         this.dishPersistencePort=dishPersistencePort;
         this.orderPersistencePort = orderPersistencePort;
+        this.userInfoPort = userInfoPort;
+        this.traceabilityPort = traceabilityPort;
     }
 
     @Override
@@ -61,6 +68,29 @@ public class OrderUseCase implements IOrderServicePort {
         }
         validateStatus(status);
         return orderPersistencePort.getOrdersByRestaurantAndStatus(idRestaurant,status,pageNumber,pageSize);
+    }
+
+    @Override
+    public void assignOrder(Long orderId, Long idEmployee, Long idEmployeeRestaurant) {
+        OrderModel order = orderPersistencePort.getOrderById(orderId);
+        if(order==null){
+            throw new OrderNotFoundException();
+        }
+        if(!OrderStatus.PENDIENTE.name().equals(order.getStatus())){
+            throw new OrderNotPendingException();
+        }
+        if(!order.getIdRestaurant().equals(idEmployeeRestaurant)){
+            throw new EmployeeNotFromOrderRestaurantException();
+        }
+        String previousStatus = order.getStatus();
+        order.setStatus(OrderStatus.EN_PREPARACION.name());
+        order.setIdChef(idEmployee);
+        orderPersistencePort.updateOrder(order);
+
+        String clientEmail=userInfoPort.getUserEmail(order.getIdClient());
+        String employeeEmail=userInfoPort.getUserEmail(idEmployee);
+
+        traceabilityPort.registerStatusChange(orderId,order.getIdClient(),clientEmail,previousStatus,OrderStatus.EN_PREPARACION.name(),idEmployee,employeeEmail);
     }
 
     private void validateQuantity(OrderModel orderModel){
