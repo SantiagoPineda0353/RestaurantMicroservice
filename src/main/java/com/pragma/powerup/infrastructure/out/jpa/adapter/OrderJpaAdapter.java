@@ -76,6 +76,7 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
                         .orElseThrow(OrderNotFoundException::new);
         managedEntity.setStatus(orderModel.getStatus());
         managedEntity.setIdChef(orderModel.getIdChef());
+        managedEntity.setSecurityPin(orderModel.getSecurityPin());
         orderRepository.save(managedEntity);
     }
 }
