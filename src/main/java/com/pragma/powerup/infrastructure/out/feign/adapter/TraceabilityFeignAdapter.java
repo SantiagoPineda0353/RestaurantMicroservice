@@ -12,4 +12,9 @@ public class TraceabilityFeignAdapter implements ITraceabilityPort {
     public void registerStatusChange(Long idOrder, Long idClient, String clientEmail, String previousStatus, String newStatus, Long idEmployee, String employeeEmail) {
         traceabilityFeignClient.saveTraceability(new SaveTraceabilityFeignRequestDto( idOrder,  idClient,  clientEmail,  previousStatus,  newStatus,  idEmployee,  employeeEmail));
     }
+
+    @Override
+    public Long getOrderTotalDurationSeconds(Long idOrder) {
+        return traceabilityFeignClient.getTotalDuration(idOrder);
+    }
 }
