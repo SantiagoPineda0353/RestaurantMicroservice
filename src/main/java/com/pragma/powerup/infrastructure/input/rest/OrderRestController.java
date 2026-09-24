@@ -86,4 +86,15 @@ public class OrderRestController {
         orderHandler.deliverOrder(orderId,deliverOrderRequestDto,idEmployee,idEmployeeRestaurant);
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "Orden Cancelada")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Orden Cancelada", content = @Content)
+    })
+    @PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
+        Long idClient = AuthenticationUtils.getAuthenticatedUserId();
+        orderHandler.cancelOrder(orderId,idClient);
+        return ResponseEntity.ok().build();
+    }
 }
