@@ -32,11 +32,23 @@ public class RestaurantRestController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Obtener restaurante")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Restaurante obtenido", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos de restaurante incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "restaurante no encontrado", content = @Content)
+    })
     @GetMapping("/{id}")
     public ResponseEntity<RestaurantResponseDto> getRestaurantById(@PathVariable Long id) {
         return ResponseEntity.ok(restaurantHandler.getRestaurantById(id));
     }
 
+    @Operation(summary = "Obtener restaurantes")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Restaurantes obtenidos", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos de paginacion incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "restaurantes no encontrados", content = @Content)
+    })
     @GetMapping("/")
     public ResponseEntity<PageResponseDto<RestaurantSummaryResponseDto>> getAllRestaurants(@RequestParam(defaultValue = "0")int page,
                                                                                            @RequestParam(defaultValue = "10")int size) {

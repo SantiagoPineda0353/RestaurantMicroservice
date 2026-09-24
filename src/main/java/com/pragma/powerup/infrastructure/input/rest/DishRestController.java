@@ -51,7 +51,7 @@ public class DishRestController {
 
     @Operation(summary = "Actualizar estado del plato")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Plato Actualizado", content = @Content),
+            @ApiResponse(responseCode = "201", description = "Estado del plato Actualizado", content = @Content),
             @ApiResponse(responseCode = "400", description = "Datos de plato incorrectos", content = @Content),
             @ApiResponse(responseCode = "404", description = "Plato no encontrado", content = @Content)
     })

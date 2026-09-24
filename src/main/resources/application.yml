@@ -15,7 +15,7 @@ jwt:
   secret:
 
 app:
-  appDescription: "Pragma Powerup"
+  appDescription: "Restaurante MicroServicio"
   appVersion: "1.0.0"
 
 adapters:

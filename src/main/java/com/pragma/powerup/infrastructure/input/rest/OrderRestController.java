@@ -29,8 +29,7 @@ public class OrderRestController {
     @Operation(summary = "Crear Orden")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Orden creada", content = @Content),
-            @ApiResponse(responseCode = "400", description = "Datos de orden incorrectos", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Platos no encontrados", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Datos de orden incorrectos", content = @Content)
     })
     @PostMapping("/")
     public ResponseEntity<Void> saveOrder(@RequestBody SaveOrderRequestDto saveOrderRequestDto) {
@@ -55,7 +54,8 @@ public class OrderRestController {
     @Operation(summary = "Asignar Orden")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Orden asignada", content = @Content),
-            @ApiResponse(responseCode = "400", description = "Datos de orden incorrectos", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Datos de orden incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Orden no encontrada", content = @Content)
     })
     @PatchMapping("/{orderId}/assign")
     public ResponseEntity<Void> assignOrder(@PathVariable Long orderId) {
@@ -68,7 +68,8 @@ public class OrderRestController {
     @Operation(summary = "Orden Lista")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Orden Lista", content = @Content),
-            @ApiResponse(responseCode = "400", description = "Datos de orden incorrectos", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Datos de orden incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Orden no encontrada", content = @Content)
     })
     @PatchMapping("/{orderId}/ready")
     public ResponseEntity<Void> notifyOrderReady(@PathVariable Long orderId) {
@@ -81,7 +82,8 @@ public class OrderRestController {
     @Operation(summary = "Orden Entregada")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Orden Entregada", content = @Content),
-            @ApiResponse(responseCode = "400", description = "Pin erroneo", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Pin erroneo", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Orden no encontrada", content = @Content)
     })
     @PatchMapping("/{orderId}/deliver")
     public ResponseEntity<Void> notifyOrderReady(@PathVariable Long orderId, @RequestBody DeliverOrderRequestDto deliverOrderRequestDto) {
@@ -93,7 +95,8 @@ public class OrderRestController {
 
     @Operation(summary = "Orden Cancelada")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Orden Cancelada", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Orden Cancelada", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Orden no encontrada", content = @Content)
     })
     @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
@@ -104,9 +107,9 @@ public class OrderRestController {
 
     @Operation(summary = "Obtener eficiencia de Ordenes por restaurante")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Ordenes Obtenidas", content = @Content),
+            @ApiResponse(responseCode = "201", description = "Tiempos Obtenidss", content = @Content),
             @ApiResponse(responseCode = "400", description = "Datos incorrectos", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Ordenes no encontradas", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Restaurante no encontrado", content = @Content)
     })
     @GetMapping("/efficiency/{idRestaurant}")
     public ResponseEntity<List<OrderEfficiencyResponseDto>> getDishesByRestaurant(@PathVariable Long idRestaurant) {
@@ -114,6 +117,12 @@ public class OrderRestController {
         return ResponseEntity.ok(orderHandler.getRestaurantEfficiency(idRestaurant,idOwner));
     }
 
+    @Operation(summary = "Obtener Ranking de empleados por eficiencia")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Empleados Obtenidss", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Restaurante no encontrado", content = @Content)
+    })
     @GetMapping("/efficiency/{idRestaurant}/ranking")
     public ResponseEntity<List<EmployeeEfficiencyResponseDto>> getEmployeeRanking(@PathVariable Long idRestaurant) {
         Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
