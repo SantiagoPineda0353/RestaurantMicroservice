@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
+                    .antMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
                     .antMatchers(HttpMethod.POST , "/api/v1/restaurants/**").hasRole("ADMINISTRADOR")
                     .antMatchers(HttpMethod.POST , "/api/v1/dishes/**").hasRole(ROL2)
                     .antMatchers(HttpMethod.PATCH , "/api/v1/dishes/**").hasRole(ROL2)
