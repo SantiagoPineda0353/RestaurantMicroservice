@@ -79,4 +79,12 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
         managedEntity.setSecurityPin(orderModel.getSecurityPin());
         orderRepository.save(managedEntity);
     }
+
+    @Override
+    public List<OrderModel> getDeliveredOrdersByRestaurant(Long idRestaurant) {
+      List<OrderEntity> entities=orderRepository.findByIdRestaurantAndStatus(idRestaurant,"ENTREGADO");
+      return entities.stream()
+              .map(orderEntityMapper::toModel)
+              .collect(Collectors.toList());
+    }
 }

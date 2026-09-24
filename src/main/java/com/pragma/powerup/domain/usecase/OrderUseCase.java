@@ -8,8 +8,7 @@ import com.pragma.powerup.domain.spi.*;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class OrderUseCase implements IOrderServicePort {
@@ -19,14 +18,16 @@ public class OrderUseCase implements IOrderServicePort {
     private final IUserInfoPort userInfoPort;
     private final ITraceabilityPort traceabilityPort;
     private final IMessagingPort messagingPort;
+    private final IRestaurantPersistencePort restaurantPersistencePort;
     private static final ZoneId ZONE_ID= ZoneId.of("America/Bogota");
 
-    public OrderUseCase(IDishPersistencePort dishPersistencePort , IOrderPersistencePort orderPersistencePort, IUserInfoPort userInfoPort, ITraceabilityPort traceabilityPort, IMessagingPort messagingPort) {
+    public OrderUseCase(IDishPersistencePort dishPersistencePort , IOrderPersistencePort orderPersistencePort, IUserInfoPort userInfoPort, ITraceabilityPort traceabilityPort, IMessagingPort messagingPort, IRestaurantPersistencePort restaurantPersistencePort) {
         this.dishPersistencePort=dishPersistencePort;
         this.orderPersistencePort = orderPersistencePort;
         this.userInfoPort = userInfoPort;
         this.traceabilityPort = traceabilityPort;
         this.messagingPort = messagingPort;
+        this.restaurantPersistencePort = restaurantPersistencePort;
     }
 
     @Override
@@ -173,6 +174,66 @@ public class OrderUseCase implements IOrderServicePort {
 
         String clientEmail = userInfoPort.getUserEmail(order.getIdClient());
         traceabilityPort.registerStatusChange(orderId, order.getIdClient(), clientEmail,previousStatus,OrderStatus.CANCELADO.name(),null,null);
+    }
+
+    @Override
+    public List<OrderEfficiencyModel> getRestaurantEfficiency(Long idRestaurant, Long idOwner) {
+        List<OrderModel> deliveredOrders = validateAndGetDeliveredOrders(idRestaurant, idOwner);
+
+        List<OrderEfficiencyModel> efficiencyList = new java.util.ArrayList<>();
+        for (OrderModel order : deliveredOrders) {
+            Long duration = traceabilityPort.getOrderTotalDurationSeconds(order.getId());
+            if (duration != null) {
+                efficiencyList.add(new OrderEfficiencyModel(order.getId(), order.getIdChef(), duration, false));
+            }
+        }
+
+        if (efficiencyList.isEmpty()) {
+            return efficiencyList;
+        }
+
+        double average = efficiencyList.stream()
+                .mapToLong(OrderEfficiencyModel::getDurationSeconds)
+                .average()
+                .orElse(0);
+
+        efficiencyList.forEach(e -> e.setSlowerThanAverage(e.getDurationSeconds() > average));
+
+        return efficiencyList;
+    }
+
+    @Override
+    public List<EmployeeEfficiencyModel> getEmployeeRanking(Long idRestaurant, Long idOwner) {
+        List<OrderModel> deliveredOrders = validateAndGetDeliveredOrders(idRestaurant, idOwner);
+
+        Map<Long, List<Long>> durationsByEmployee = new java.util.HashMap<>();
+
+        for (OrderModel order : deliveredOrders) {
+            Long duration = traceabilityPort.getOrderTotalDurationSeconds(order.getId());
+            if (duration != null && order.getIdChef() != null) {
+                durationsByEmployee
+                        .computeIfAbsent(order.getIdChef(), k -> new java.util.ArrayList<>())
+                        .add(duration);
+            }
+        }
+
+         return durationsByEmployee.entrySet().stream()
+                .map(entry -> new EmployeeEfficiencyModel(
+                        entry.getKey(),
+                        entry.getValue().stream().mapToLong(Long::longValue).average().orElse(0)))
+                .sorted(Comparator.comparingDouble(EmployeeEfficiencyModel::getAverageDurationSeconds))
+                .collect(Collectors.toList());
+    }
+
+    private List<OrderModel> validateAndGetDeliveredOrders(Long idRestaurant, Long idOwner) {
+        RestaurantModel restaurant = restaurantPersistencePort.getRestaurantById(idRestaurant);
+        if (restaurant == null) {
+            throw new RestaurantNotFoundException();
+        }
+        if (!restaurant.getIdOwner().equals(idOwner)) {
+            throw new UserNotRestaurantOwnerException();
+        }
+        return orderPersistencePort.getDeliveredOrdersByRestaurant(idRestaurant);
     }
 
     private void validateQuantity(OrderModel orderModel){

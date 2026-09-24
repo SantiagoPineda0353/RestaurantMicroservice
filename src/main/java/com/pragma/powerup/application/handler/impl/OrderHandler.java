@@ -2,6 +2,8 @@ package com.pragma.powerup.application.handler.impl;
 
 import com.pragma.powerup.application.dto.request.DeliverOrderRequestDto;
 import com.pragma.powerup.application.dto.request.SaveOrderRequestDto;
+import com.pragma.powerup.application.dto.response.EmployeeEfficiencyResponseDto;
+import com.pragma.powerup.application.dto.response.OrderEfficiencyResponseDto;
 import com.pragma.powerup.application.dto.response.OrderSummaryResponseDto;
 import com.pragma.powerup.application.dto.response.PageResponseDto;
 import com.pragma.powerup.application.handler.IOrderHandler;
@@ -59,5 +61,31 @@ public class OrderHandler implements IOrderHandler {
     @Override
     public void cancelOrder(Long orderId, Long idClient) {
         orderServicePort.cancelOrder(orderId,idClient);
+    }
+
+    @Override
+    public List<OrderEfficiencyResponseDto> getRestaurantEfficiency(Long idRestaurant, Long idOwner) {
+        return orderServicePort.getRestaurantEfficiency(idRestaurant,idOwner).stream()
+                .map(e-> {
+                    OrderEfficiencyResponseDto dto = new OrderEfficiencyResponseDto();
+                    dto.setIdOrder(e.getIdOrder());
+                    dto.setIdChef(e.getIdChef());
+                    dto.setDurationSeconds(e.getDurationSeconds());
+                    dto.setSlowerThanAverage(e.isSlowerThanAverage());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EmployeeEfficiencyResponseDto> getEmployeeRanking(Long idRestaurant, Long idOwner) {
+        return orderServicePort.getEmployeeRanking(idRestaurant, idOwner).stream()
+                .map(e -> {
+                    EmployeeEfficiencyResponseDto dto = new EmployeeEfficiencyResponseDto();
+                    dto.setIdEmployee(e.getIdEmployee());
+                    dto.setAverageDurationSeconds(e.getAverageDurationSeconds());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }

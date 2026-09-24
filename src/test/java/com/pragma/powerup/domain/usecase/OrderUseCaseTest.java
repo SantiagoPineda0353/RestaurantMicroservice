@@ -1,10 +1,7 @@
 package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.exception.*;
-import com.pragma.powerup.domain.model.DishModel;
-import com.pragma.powerup.domain.model.OrderDishModel;
-import com.pragma.powerup.domain.model.OrderModel;
-import com.pragma.powerup.domain.model.PageModel;
+import com.pragma.powerup.domain.model.*;
 import com.pragma.powerup.domain.spi.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +23,8 @@ class OrderUseCaseTest {
     @Mock
     private IDishPersistencePort dishPersistencePort;
     @Mock
+    private IRestaurantPersistencePort restaurantPersistencePort;
+    @Mock
     private IUserInfoPort userInfoPort;
     @Mock
     private ITraceabilityPort traceabilityPort;
@@ -38,7 +37,9 @@ class OrderUseCaseTest {
     private OrderModel validOrder;
     private DishModel dish1;
     private DishModel dish2;
+    private RestaurantModel restaurantModelValid;
     private static final Long CLIENT_ID = 1L;
+    private static final Long  OWNER_ID = 2L;
 
     @BeforeEach
     void setUp() {
@@ -47,7 +48,8 @@ class OrderUseCaseTest {
                 new OrderDishModel(2L, 1)
         );
         validOrder = new OrderModel(null, null, null, null, null, null, dishes, null);
-
+        restaurantModelValid= new RestaurantModel(null, "R1", "dg 12 #12-12", "+212232122",
+                "http:imagen.com", "23231231",2L);
         dish1 = new DishModel(1L, "Changua", 35000, "Sopa tipica", "url", 1L, 5L, true);
         dish2 = new DishModel(2L, "Bandeja paisa", 30000, "Palto tipico", "url", 1L, 5L, true);
     }
@@ -371,5 +373,65 @@ class OrderUseCaseTest {
 
         assertThrows(OrderCanNotCancelledException.class, () -> orderUseCase.cancelOrder(1L, 5L));
         verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void getRestaurantEfficiency_whenValidData_thenFlagSlowerOrders(){
+        OrderModel order1= new OrderModel(1L,5L,null,"ENTREGADO",3L,10L,List.of(),null);
+        OrderModel order2= new OrderModel(2L,6L,null,"ENTREGADO",3L,10L,List.of(),null);
+
+        when(restaurantPersistencePort.getRestaurantById(10L))
+                .thenReturn(restaurantModelValid);
+        when(orderPersistencePort.getDeliveredOrdersByRestaurant(10L))
+                .thenReturn(List.of(order1,order2));
+        when(traceabilityPort.getOrderTotalDurationSeconds(1L))
+                .thenReturn(200L);
+        when(traceabilityPort.getOrderTotalDurationSeconds(2L))
+                .thenReturn(1000L);
+
+        List<OrderEfficiencyModel> result=orderUseCase.getRestaurantEfficiency(10L,OWNER_ID);
+
+        assertEquals(2,result.size());
+        assertFalse(result.get(0).isSlowerThanAverage());
+        assertTrue(result.get(1).isSlowerThanAverage());
+    }
+
+    @Test
+    void getRestaurantEfficiency_whenRestaurantNonExistent_thenThrowsException(){
+        when(restaurantPersistencePort.getRestaurantById(99L))
+                .thenReturn(null);
+        assertThrows(RestaurantNotFoundException.class, () ->orderUseCase.getRestaurantEfficiency(99L,OWNER_ID));
+    }
+
+    @Test
+    void getRestaurantEfficiency_whenUserIsNotOwner_thenThrowsException(){
+        when(restaurantPersistencePort.getRestaurantById(10L))
+                .thenReturn(restaurantModelValid);
+
+        Long otherUser=999L;
+
+        assertThrows(UserNotRestaurantOwnerException.class,
+                () ->orderUseCase.getRestaurantEfficiency(10L,otherUser));
+    }
+
+    @Test
+    void getEmployeeRanking_whenValidData_thenReturnSortedRanking(){
+        OrderModel order1= new OrderModel(1L,5L,null,"ENTREGADO",3L,10L,List.of(),null);
+        OrderModel order2= new OrderModel(2L,6L,null,"ENTREGADO",4L,10L,List.of(),null);
+
+        when(restaurantPersistencePort.getRestaurantById(10L))
+                .thenReturn(restaurantModelValid);
+        when(orderPersistencePort.getDeliveredOrdersByRestaurant(10L))
+                .thenReturn(List.of(order1,order2));
+        when(traceabilityPort.getOrderTotalDurationSeconds(1L))
+                .thenReturn(1000L);
+        when(traceabilityPort.getOrderTotalDurationSeconds(2L))
+                .thenReturn(200L);
+
+        List<EmployeeEfficiencyModel> result=orderUseCase.getEmployeeRanking(10L,OWNER_ID);
+
+        assertEquals(2,result.size());
+        assertEquals(4L,result.get(0).getIdEmployee());
+        assertEquals(200.0,result.get(0).getAverageDurationSeconds());
     }
 }

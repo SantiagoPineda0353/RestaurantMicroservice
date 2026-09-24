@@ -2,6 +2,8 @@ package com.pragma.powerup.infrastructure.input.rest;
 
 import com.pragma.powerup.application.dto.request.DeliverOrderRequestDto;
 import com.pragma.powerup.application.dto.request.SaveOrderRequestDto;
+import com.pragma.powerup.application.dto.response.EmployeeEfficiencyResponseDto;
+import com.pragma.powerup.application.dto.response.OrderEfficiencyResponseDto;
 import com.pragma.powerup.application.dto.response.OrderSummaryResponseDto;
 import com.pragma.powerup.application.dto.response.PageResponseDto;
 import com.pragma.powerup.application.handler.IOrderHandler;
@@ -14,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -96,5 +100,23 @@ public class OrderRestController {
         Long idClient = AuthenticationUtils.getAuthenticatedUserId();
         orderHandler.cancelOrder(orderId,idClient);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Obtener eficiencia de Ordenes por restaurante")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Ordenes Obtenidas", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos incorrectos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Ordenes no encontradas", content = @Content)
+    })
+    @GetMapping("/efficiency/{idRestaurant}")
+    public ResponseEntity<List<OrderEfficiencyResponseDto>> getDishesByRestaurant(@PathVariable Long idRestaurant) {
+        Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
+        return ResponseEntity.ok(orderHandler.getRestaurantEfficiency(idRestaurant,idOwner));
+    }
+
+    @GetMapping("/efficiency/{idRestaurant}/ranking")
+    public ResponseEntity<List<EmployeeEfficiencyResponseDto>> getEmployeeRanking(@PathVariable Long idRestaurant) {
+        Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
+        return ResponseEntity.ok(orderHandler.getEmployeeRanking(idRestaurant, idOwner));
     }
 }
