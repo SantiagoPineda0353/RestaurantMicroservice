@@ -9,4 +9,5 @@ public interface IOrderServicePort {
     void assignOrder(Long orderId, Long idEmployee, Long idEmployeeRestaurant);
     void notifyOrderReady(Long orderId, Long idEmployee, Long idEmployeeRestaurant);
     void deliverOrder(Long orderId,String securityPin, Long idEmployee, Long idEmployeeRestaurant);
+    void cancelOrder(Long orderId,Long idClient);
 }

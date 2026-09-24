@@ -154,6 +154,27 @@ public class OrderUseCase implements IOrderServicePort {
         traceabilityPort.registerStatusChange(orderId, order.getIdClient(), clientEmail,previousStatus,OrderStatus.ENTREGADO.name(),idEmployee,employeeEmail);
     }
 
+    @Override
+    public void cancelOrder(Long orderId, Long idClient) {
+        OrderModel order = orderPersistencePort.getOrderById(orderId);
+        if(order==null){
+            throw new OrderNotFoundException();
+        }
+        if(!OrderStatus.PENDIENTE.name().equals(order.getStatus())){
+            throw new OrderCanNotCancelledException();
+        }
+        if(!order.getIdClient().equals(idClient)){
+            throw new ClientNotOwnerOfOrderException();
+        }
+
+        String previousStatus = order.getStatus();
+        order.setStatus(OrderStatus.CANCELADO.name());
+        orderPersistencePort.updateOrder(order);
+
+        String clientEmail = userInfoPort.getUserEmail(order.getIdClient());
+        traceabilityPort.registerStatusChange(orderId, order.getIdClient(), clientEmail,previousStatus,OrderStatus.CANCELADO.name(),null,null);
+    }
+
     private void validateQuantity(OrderModel orderModel){
         for(OrderDishModel dish :orderModel.getDishes()){
             if (dish.getQuantity() ==null|| dish.getQuantity()<=0){

@@ -37,7 +37,7 @@ public class SecurityConfig {
                     .antMatchers(HttpMethod.PATCH , "/api/v1/orders/*/assign").hasRole(ROL3)
                     .antMatchers(HttpMethod.PATCH , "/api/v1/orders/*/ready").hasRole(ROL3)
                     .antMatchers(HttpMethod.PATCH , "/api/v1/orders/*/deliver").hasRole(ROL3)
-
+                    .antMatchers(HttpMethod.PATCH , "/api/v1/orders/*/cancel").hasRole(ROL4)
                     .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
